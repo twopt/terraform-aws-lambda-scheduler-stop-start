@@ -181,48 +181,33 @@ EOF
 }
 
 locals {
-  lambda_logging_policy = {
-    "Version": "2012-10-17",
-    "Statement": [
-      {
-        "Action": [
-          "logs:CreateLogStream",
-          "logs:PutLogEvents"
-        ],
-        "Resource": "${aws_cloudwatch_log_group.this.arn}",
-        "Effect": "Allow"
-      }
-    ]
-  }
   lambda_logging_and_kms_policy = {
-    "Version": "2012-10-17",
-    "Statement": [
+    "Version" : "2012-10-17",
+    "Statement" : [
       {
-        "Action": [
-          "logs:CreateLogStream",
-          "logs:PutLogEvents"
-        ],
-        "Resource": "${aws_cloudwatch_log_group.this.arn}",
-        "Effect": "Allow"
-      },
-      {
-        "Action": [
+        "Action" : [
           "kms:Encrypt",
           "kms:Decrypt",
           "kms:CreateGrant"
         ],
-        "Resource": "${var.kms_key_arn}",
-        "Effect": "Allow"
+        "Resource" : "${var.kms_key_arn}",
+        "Effect" : "Allow"
       }
     ]
   }
 }
 
+resource "aws_iam_role_policy_attachment" "lambda_logging" {
+  count      = var.custom_iam_role_arn == null ? 1 : 0
+  role       = aws_iam_role.this[0].name
+  policy_arn = "arn:aws:iam::aws:policy/service-role/AWSLambdaBasicExecutionRole"
+}
+
 resource "aws_iam_role_policy" "lambda_logging" {
-  count  = var.custom_iam_role_arn == null ? 1 : 0
+  count  = var.custom_iam_role_arn == null && var.kms_key_arn != null ? 1 : 0
   name   = "${var.name}-lambda-logging"
   role   = aws_iam_role.this[0].id
-  policy = var.kms_key_arn == null ? jsonencode(local.lambda_logging_policy) : jsonencode(local.lambda_logging_and_kms_policy)
+  policy = jsonencode(local.lambda_logging_and_kms_policy)
 }
 
 ################################################
