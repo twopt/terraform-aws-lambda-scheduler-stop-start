@@ -190,7 +190,7 @@ locals {
           "kms:Decrypt",
           "kms:CreateGrant"
         ],
-        "Resource" : "${var.kms_key_arn}",
+        "Resource" : var.kms_key_arn,
         "Effect" : "Allow"
       }
     ]
